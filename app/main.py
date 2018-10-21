@@ -1,21 +1,14 @@
 from flask import Flask, abort, jsonify
-from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from models import db
+from models.post import Post
 import config
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = config.alchemy_uri()
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db = SQLAlchemy()
-
-class Post(db.Model):
-	id = db.Column(db.Integer, primary_key=True)
-	content = db.Column(db.Text, nullable=False)
-	author_email = db.Column(db.String(100), nullable=False)
-	created_time = db.Column(db.DateTime, nullable=False, default=datetime.now)
-
 db.init_app(app)
+
 
 @app.route('/', methods=['GET'])
 def index():
