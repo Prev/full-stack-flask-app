@@ -1,0 +1,52 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/python:3.6.1
+        environment:
+          MYSQL_HOST: 127.0.0.1
+          MYSQL_USER: root
+          MYSQL_PASS: root
+          MYSQL_DB: test_db
+
+      - image: mysql:5.7
+        command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_bin
+        environment:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: test_db
+
+    working_directory: ~/app
+
+    steps:
+      - checkout
+      - run:
+          name: Install MySQL Client
+          command: sudo apt-get update && sudo apt install -y mysql-client
+
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "requirements.txt" }}
+          - v1-dependencies-
+
+      - run:
+          name: install dependencies
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install -r requirements.txt
+            pip install -r test-requirements.txt
+
+      - save_cache:
+          paths:
+            - ./venv
+          key: v1-dependencies-{{ checksum "requirements.txt" }}
+
+      - run:
+          name: run tests
+          command: |
+            . venv/bin/activate
+            PYTHONPATH=app pytest
+
+      - store_artifacts:
+          path: test-reports
+          destination: test-reports
